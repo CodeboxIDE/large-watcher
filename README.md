@@ -72,3 +72,6 @@ Whenenver modified files are detected, returns list of modified filenames, like 
     "./file_b"
 ]
 ```
+
+### `.on('error'`
+:warning: Must be handled or process will crash on errors.
