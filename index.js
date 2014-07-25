@@ -6,7 +6,7 @@ var EventEmitter = require("events").EventEmitter;
 var find = require('./find');
 
 
-function Watcher(dirname, period) {
+function Watcher(dirname, period, filter) {
     if(!(this instanceof Watcher)) {
         return new Watcher(dirname, period);
     }
@@ -16,6 +16,9 @@ function Watcher(dirname, period) {
 
     // Directy to monitor
     this.dirname = dirname;
+
+    // File filter
+    this.filter = filter || defaultFilter;
 
     // Intervals to track
     this.deletedTimeout = null;
@@ -108,7 +111,7 @@ Watcher.prototype.pollModified = function(cb) {
 
     this.modifiedTimeout = setTimeout(function() {
         find.modifiedSince(that.dirname, 1, function(err, files) {
-            cb(err, files);
+            cb(err, files.filter(that.filter));
 
             // Continue
             that.pollModified(cb);
@@ -121,7 +124,9 @@ Watcher.prototype.pollDeleted = function(cb) {
 
     // Poll
     this.deletedTimeout = setTimeout(function() {
-        find.dump(that.dirname, function(err, tree) {
+        find.dump(that.dirname, function(err, files) {
+            tree = files.filter(that.filter);
+
             if(err) {
                 return cb(err, []);
             } else if(!that.prevTree) {
@@ -147,6 +152,12 @@ Watcher.prototype.pollDeleted = function(cb) {
         });
     }, this.period/2 * 1000);
 };
+
+
+function defaultFilter(filepath) {
+    // Ignore files/folders starting with "."
+    return filepath.indexOf("/.") === -1;
+}
 
 // Utility diff function
 // TODO: improve speed
