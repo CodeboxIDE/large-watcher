@@ -75,3 +75,6 @@ Whenenver modified files are detected, returns list of modified filenames, like 
 
 ### `.on('error'`
 :warning: Must be handled or process will crash on errors.
+
+## Misc
+Inspired by http://stackoverflow.com/a/24789597
