@@ -28,22 +28,22 @@ w.on('modified', log.bind(null, 'modified'));
 
 ## Methods
 
-### watcher(directory, seconds)
+### `watcher(directory, seconds)`
 Creates an instance of the watcher, that polls `directory` every `seconds` for changes
 
-### .start()
+### `.start()`
 Initiates watching, starts polling directory for changes
 
-### .stop()
+### `.stop()`
 Stops watching, clears polling. `.start()` must be called again for any changed to happen
 
-### .cleanup()
+### `.cleanup()`
 Stops watcher and removes all event listeners
 
 
 ## Events
 
-### 'change'
+### `'change'`
 This event is triggered whenever any files are `modified` or `deleted`. It's data is simply the combination of `modified` and `deleted` events' data. Example :
 
 ```json
@@ -53,7 +53,7 @@ This event is triggered whenever any files are `modified` or `deleted`. It's dat
 }
 ```
 
-### 'modified'
+### `'modified'`
 Whenenver modified files are detected, returns list of modified filenames, like :
 
 ```json
@@ -63,7 +63,7 @@ Whenenver modified files are detected, returns list of modified filenames, like 
 ]
 ```
 
-### 'deleted'
+### `'deleted'`
 Whenenver modified files are detected, returns list of modified filenames, like :
 
 ```json
