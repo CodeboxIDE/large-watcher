@@ -13,7 +13,7 @@ function find(args, cb) {
 // Get all modified files since "time" seconds ago
 function modifiedSince(dirname, time, cb) {
     // Make sure time is in seconds
-    var timestr = Math.floor(time).toString();
+    var timestr = Math.ceil(time + 1).toString();
 
     // Run the command
     find([
