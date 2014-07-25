@@ -1,0 +1,28 @@
+{
+  "name": "large-watcher",
+  "version": "0.0.0",
+  "description": "A watcher for NodeJS, that works well with large directories",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/CodeboxIDE/large-watcher.git"
+  },
+  "keywords": [
+    "watcher",
+    "large",
+    "directory",
+    "directories",
+    "big",
+    "many",
+    "files"
+  ],
+  "author": "Aaron O'Mullan <aaron.omullan@gmail.com>",
+  "license": "Apache 2",
+  "bugs": {
+    "url": "https://github.com/CodeboxIDE/large-watcher/issues"
+  },
+  "homepage": "https://github.com/CodeboxIDE/large-watcher"
+}
