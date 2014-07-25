@@ -43,7 +43,7 @@ Stops watcher and removes all event listeners
 
 ## Events
 
-### `'change'`
+### `.on('change', `
 This event is triggered whenever any files are `modified` or `deleted`. It's data is simply the combination of `modified` and `deleted` events' data. Example :
 
 ```json
@@ -53,7 +53,7 @@ This event is triggered whenever any files are `modified` or `deleted`. It's dat
 }
 ```
 
-### `'modified'`
+### `.on('modified', `
 Whenenver modified files are detected, returns list of modified filenames, like :
 
 ```json
@@ -63,7 +63,7 @@ Whenenver modified files are detected, returns list of modified filenames, like 
 ]
 ```
 
-### `'deleted'`
+### `.on('deleted', `
 Whenenver modified files are detected, returns list of modified filenames, like :
 
 ```json
