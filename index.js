@@ -139,7 +139,6 @@ Watcher.prototype.pollDeleted = function(cb) {
 
             var t1 = Date.now();
             var d = arrayDiff(that.prevTree, tree);
-            console.log('diff took', Date.now() - t1, 'ms');
 
             // Retun data
             cb(null, d);
