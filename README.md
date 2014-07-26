@@ -21,6 +21,7 @@ var w = watcher('/Users/aaron/git/large-watcher', 1).start();
 var log = console.log.bind(console);
 
 w.on('change', log.bind(null, 'change'));
+w.on('created', log.bind(null, 'created'));
 w.on('deleted', log.bind(null, 'deleted'));
 w.on('modified', log.bind(null, 'modified'));
 ```
@@ -51,6 +52,16 @@ This event is triggered whenever any files are `modified` or `deleted`. It's dat
     deleted: ["./remove-file", "./another-removed-file-somewhere"],
     modified: ["./this-file-was-modified"],
 }
+```
+
+### `.on('created', `
+Whenenver newly created files are detected, returns list of created filenames, like :
+
+```json
+[
+    "./file_a",
+    "./file_b"
+]
 ```
 
 ### `.on('modified', `
