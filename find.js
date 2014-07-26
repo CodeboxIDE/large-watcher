@@ -18,6 +18,19 @@ function find(dirname, args, cb) {
     spawned.once('error', cb);
 }
 
+function createdSince(dirname, time, cb) {
+    // Make sure time is in seconds
+    var timestr = Math.ceil(time + 1).toString();
+
+    // Run the command
+    find(dirname, [
+        '-type', 'f',
+        // Created less than time seconds ago
+        '-Btime',
+        '-'+timestr+'s',
+    ], cb);
+}
+
 // Get all modified files since "time" seconds ago
 function modifiedSince(dirname, time, cb) {
     // Make sure time is in seconds
@@ -26,8 +39,16 @@ function modifiedSince(dirname, time, cb) {
     // Run the command
     find(dirname, [
         '-type', 'f',
+        // Modified less than time seconds ago
         '-mtime',
         '-'+timestr+'s',
+        // And (extremely important otherwise it's an or)
+
+        '-and',
+        // Created more than time seconds ago
+        // (to ignore created files)
+        '-Btime',
+        '+'+timestr+'s',
     ], cb);
 }
 
@@ -63,4 +84,5 @@ function execHandler(cb) {
 
 // Exports
 exports.dump = dumpTree;
+exports.createdSince = createdSince;
 exports.modifiedSince = modifiedSince;

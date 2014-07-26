@@ -22,12 +22,17 @@ function Watcher(dirname, period, filter) {
 
     // Intervals to track
     this.deletedTimeout = null;
+    this.createdTimeout = null;
     this.modifiedTimeout = null;
 
-    // Bind methods
+    // Bind poll methods
     this.pollDeleted = this.pollDeleted.bind(this);
+    this.pollCreated = this.pollCreated.bind(this);
     this.pollModified = this.pollModified.bind(this);
+
+    // Bind handler methods
     this.deletedHandler = this.deletedHandler.bind(this);
+    this.createdHandler = this.createdHandler.bind(this);
     this.modifiedHandler = this.modifiedHandler.bind(this);
 
     // Buffered data
@@ -47,12 +52,14 @@ inherits(Watcher, EventEmitter);
 
 Watcher.prototype.start = function() {
     this.deletedTimeout = this.pollDeleted(this.deletedHandler);
+    this.createdTimeout = this.pollCreated(this.createdHandler);
     this.modifiedTimeout = this.pollModified(this.modifiedHandler);
     return this;
 };
 
 Watcher.prototype.stop = function() {
     clearTimeout(this.deletedTimeout);
+    clearTimeout(this.createdTimeout);
     clearTimeout(this.modifiedTimeout);
     return this;
 };
@@ -60,6 +67,7 @@ Watcher.prototype.stop = function() {
 Watcher.prototype.cleanup = function() {
     return this.stop()
     .removeAllListeners('change')
+    .removeAllListeners('created')
     .removeAllListeners('deleted')
     .removeAllListeners('modified');
 };
@@ -76,8 +84,10 @@ Watcher.prototype.handle = function(type, files) {
     // Ready to flush ?
     if(!(
         this.buffer.deleted &&
+        this.buffer.created &&
         this.buffer.modified &&
         (
+            this.buffer.created.length > 0 ||
             this.buffer.deleted.length > 0 ||
             this.buffer.modified.length > 0
         )
@@ -99,6 +109,13 @@ Watcher.prototype.modifiedHandler = function(err, files) {
     return this.handle('modified', files);
 };
 
+Watcher.prototype.createdHandler = function(err, files) {
+    if(err) {
+        return this.emit('error', err);
+    }
+    return this.handle('created', files);
+};
+
 Watcher.prototype.deletedHandler = function(err, files) {
     if(err) {
         return this.emit('error', err);
@@ -116,7 +133,20 @@ Watcher.prototype.pollModified = function(cb) {
             // Continue
             that.pollModified(cb);
         });
-    }, this.period/2 * 1000);
+    }, this.period * 1000);
+};
+
+Watcher.prototype.pollCreated = function(cb) {
+    var that = this;
+
+    this.createdTimeout = setTimeout(function() {
+        find.createdSince(that.dirname, 1, function(err, files) {
+            cb(err, files.filter(that.filter));
+
+            // Continue
+            that.pollCreated(cb);
+        });
+    }, this.period * 1000);
 };
 
 Watcher.prototype.pollDeleted = function(cb) {
