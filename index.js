@@ -155,7 +155,7 @@ Watcher.prototype.pollDeleted = function(cb) {
 
 function defaultFilter(filepath) {
     // Ignore files/folders starting with "."
-    return filepath.indexOf("/.") === -1;
+    return filepath.match(/(^\.)|(\/.)|(\\\.)/) === null;
 }
 
 // Utility diff function

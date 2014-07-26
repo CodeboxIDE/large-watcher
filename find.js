@@ -3,8 +3,16 @@ var path = require('path');
 var execFile = require("child_process").execFile;
 
 // Wrapper of find command
-function find(args, cb) {
-    var spawned = execFile('/usr/bin/find', args, { maxBuffer: 4000*1024}, execHandler(cb));
+function find(dirname, args, cb) {
+    var spawned = execFile(
+        '/usr/bin/find',
+        ['./'].concat(args),
+        {
+            maxBuffer: 4000*1024,
+            cwd: dirname,
+        },
+        execHandler(cb)
+    );
 
     // Handle error
     spawned.once('error', cb);
@@ -16,8 +24,7 @@ function modifiedSince(dirname, time, cb) {
     var timestr = Math.ceil(time + 1).toString();
 
     // Run the command
-    find([
-        dirname,
+    find(dirname, [
         '-type', 'f',
         '-mtime',
         '-'+timestr+'s',
@@ -26,8 +33,7 @@ function modifiedSince(dirname, time, cb) {
 
 // Get filetree of a folder
 function dumpTree(dirname, cb) {
-    find([
-        dirname,
+    find(dirname, [
         '-type', 'f',
     ], cb);
 }
