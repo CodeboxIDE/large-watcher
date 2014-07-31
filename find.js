@@ -2,6 +2,26 @@
 var path = require('path');
 var execFile = require("child_process").execFile;
 
+// List of directories to exlucde
+var excludeDirs = require('./excludedirs.json');
+
+
+// Prepare a string of the excluded dirs
+function excludedDirsArgs(dirs) {
+    return dirs
+    .reduce(function(accu, dir) {
+        return accu.concat([
+            '-not',
+            '(',
+            '-name',
+            dir,
+            '-prune',
+            ')',
+        ]);
+    }, []);
+}
+var EXCLUDED_ARGS = excludedDirsArgs(excludeDirs);
+
 // Wrapper of find command
 function find(dirname, args, cb) {
     var spawned = execFile(
@@ -53,10 +73,13 @@ function modifiedSince(dirname, time, cb) {
 }
 
 // Get filetree of a folder
-function dumpTree(dirname, cb) {
-    find(dirname, [
-        '-type', 'f',
-    ], cb);
+function dumpTree(dirname, shouldPrune, cb) {
+    var args = ['-type', 'f'];
+    if(shouldPrune) {
+        args = EXCLUDED_ARGS.concat(args);
+    }
+
+    find(dirname, args, cb);
 }
 
 // handler for exec function
