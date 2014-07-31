@@ -126,8 +126,10 @@ Watcher.prototype.deletedHandler = function(err, files) {
 Watcher.prototype.pollModified = function(cb) {
     var that = this;
 
+    var shouldPrune = true;
+
     this.modifiedTimeout = setTimeout(function() {
-        find.modifiedSince(that.dirname, 1, function(err, files) {
+        find.modifiedSince(that.dirname, 1, shouldPrune, function(err, files) {
             cb(err, files.filter(that.filter));
 
             // Continue
