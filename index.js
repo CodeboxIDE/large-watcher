@@ -177,8 +177,20 @@ Watcher.prototype.pollDeleted = function(cb) {
                 return;
             }
 
-            var t1 = Date.now();
+            // Middle
+            var t2 = Date.now();
+
             var d = arrayDiff(that.prevTree, tree);
+
+            // End
+            var t3 = Date.now();
+
+            console.log('filter took', t2 - t1);
+            console.log('diff took', t3 - t2);
+            console.log('Total', t3 - t1);
+            console.log('# total', files.length);
+            console.log('# filtered', tree.length);
+            console.log();
 
             // Retun data
             cb(null, d);
