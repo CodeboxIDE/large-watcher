@@ -52,12 +52,11 @@ function createdSince(dirname, time, cb) {
 }
 
 // Get all modified files since "time" seconds ago
-function modifiedSince(dirname, time, cb) {
+function modifiedSince(dirname, time, shouldPrune, cb) {
     // Make sure time is in seconds
     var timestr = Math.ceil(time + 1).toString();
 
-    // Run the command
-    find(dirname, [
+    var args = [
         '-type', 'f',
         // Modified less than time seconds ago
         '-mtime',
@@ -69,7 +68,13 @@ function modifiedSince(dirname, time, cb) {
         // (to ignore created files)
         '-Btime',
         '+'+timestr+'s',
-    ], cb);
+    ];
+    if(shouldPrune) {
+        args = EXCLUDED_ARGS.concat(args);
+    }
+
+    // Run the command
+    find(dirname, args, cb);
 }
 
 // Get filetree of a folder
