@@ -216,22 +216,22 @@ function defaultFilter(filepath) {
 // Utility diff function
 // TODO: improve speed
 function arrayDiff(a1, a2) {
-  var o1={}, o2={}, diff=[], i, len, k;
-  for (i=0, len=a1.length; i<len; i++) { o1[a1[i]] = true; }
-  for (i=0, len=a2.length; i<len; i++) { o2[a2[i]] = true; }
-  for (k in o1) { if (!(k in o2)) { diff.push(k); } }
-  //for (k in o2) { if (!(k in o1)) { diff.push(k); } }
-  return diff;
+    var o1={}, o2={}, diff=[], i, len, k;
+    for (i=0, len=a1.length; i<len; i++) { o1[a1[i]] = true; }
+    for (i=0, len=a2.length; i<len; i++) { o2[a2[i]] = true; }
+    for (k in o1) { if (!(k in o2)) { diff.push(k); } }
+    //for (k in o2) { if (!(k in o1)) { diff.push(k); } }
+    return diff;
 }
 
 // Returns both the left and right diff seperately
 function dualDiff(a1, a2) {
-  var o1={}, o2={}, diff1=[], diff2=[], i, len, k;
-  for (i=0, len=a1.length; i<len; i++) { o1[a1[i]] = true; }
-  for (i=0, len=a2.length; i<len; i++) { o2[a2[i]] = true; }
-  for (k in o1) { if (!(k in o2)) { diff1.push(k); } }
-  for (k in o2) { if (!(k in o1)) { diff2.push(k); } }
-  return [diff1, diff2];
+    var o1={}, o2={}, diff1=[], diff2=[], i, len, k;
+    for (i=0, len=a1.length; i<len; i++) { o1[a1[i]] = true; }
+    for (i=0, len=a2.length; i<len; i++) { o2[a2[i]] = true; }
+    for (k in o1) { if (!(k in o2)) { diff1.push(k); } }
+    for (k in o2) { if (!(k in o1)) { diff2.push(k); } }
+    return [diff1, diff2];
 }
 
 // Exports
