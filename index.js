@@ -21,16 +21,15 @@ function Watcher(dirname, period, filter) {
     this.filter = filter || defaultFilter;
 
     // Intervals to track
-    this.deletedTimeout = null;
-    this.createdTimeout = null;
+    this.dumpTimeout = null;
     this.modifiedTimeout = null;
 
     // Bind poll methods
-    this.pollDeleted = this.pollDeleted.bind(this);
-    this.pollCreated = this.pollCreated.bind(this);
+    this.pollDump = this.pollDump.bind(this);
     this.pollModified = this.pollModified.bind(this);
 
     // Bind handler methods
+    this.dumpHandler = this.dumpHandler.bind(this);
     this.deletedHandler = this.deletedHandler.bind(this);
     this.createdHandler = this.createdHandler.bind(this);
     this.modifiedHandler = this.modifiedHandler.bind(this);
@@ -38,6 +37,7 @@ function Watcher(dirname, period, filter) {
     // Buffered data
     this.buffer = {
         /*
+        created: [],
         deleted: [],
         modified: [],
         */
@@ -46,20 +46,32 @@ function Watcher(dirname, period, filter) {
     // Previous dumped tree
     this.prevTree = null;
 
+    // Stopped state
+    this.stopped = true;
+
     Watcher.super_.call(this);
 }
 inherits(Watcher, EventEmitter);
 
 Watcher.prototype.start = function() {
-    this.deletedTimeout = this.pollDeleted(this.deletedHandler);
-    this.createdTimeout = this.pollCreated(this.createdHandler);
+    this.stopped = false;
+    return this.poll();
+};
+
+Watcher.prototype.poll = function() {
+    // Watcher is stopped, no longer poll
+    if(this.stopped) {
+        return this;
+    }
+
+    this.dumpTimeout = this.pollDump(this.dumpHandler);
     this.modifiedTimeout = this.pollModified(this.modifiedHandler);
     return this;
 };
 
 Watcher.prototype.stop = function() {
-    clearTimeout(this.deletedTimeout);
-    clearTimeout(this.createdTimeout);
+    this.stopped = true;
+    clearTimeout(this.dumpTimeout);
     clearTimeout(this.modifiedTimeout);
     return this;
 };
@@ -76,30 +88,55 @@ Watcher.prototype.handle = function(type, files) {
     // Set changes to buffer
     this.buffer[type] = files;
 
-    // Emit event for that kind of change
-    if(this.buffer[type] && this.buffer[type].length > 0) {
-        this.emit(type, files);
+    // Adjust buffer, apply corrections
+    // 1. Remove created files from modified files
+    if(this.buffer.created && this.buffer.modified) {
+        this.buffer.modified = arrayDiff(this.buffer.modified, this.buffer.created);
     }
 
     // Ready to flush ?
     if(!(
         this.buffer.deleted &&
         this.buffer.created &&
-        this.buffer.modified &&
-        (
-            this.buffer.created.length > 0 ||
-            this.buffer.deleted.length > 0 ||
-            this.buffer.modified.length > 0
-        )
+        this.buffer.modified
     )) {
         return;
     }
 
-    // Flush buffer
-    this.emit('change', this.buffer);
+    // Do we have data to flush ?
+    if (
+            this.buffer.created.length > 0 ||
+            this.buffer.deleted.length > 0 ||
+            this.buffer.modified.length > 0
+    ) {
+        // Flush buffer
+        this.emit('change', this.buffer);
+
+        // This code could be more generic
+        // But I've kept as such for simplicity and readibility
+
+        // Check if individual changes needed emitted
+        if(this.buffer.created.length > 0) {
+            this.emit('created', this.buffer.created);
+        }
+        if(this.buffer.deleted.length > 0) {
+            this.emit('deleted', this.buffer.deleted);
+        }
+        if(this.buffer.modified.length > 0) {
+            this.emit('modified', this.buffer.modified);
+        }
+    }
 
     // Clear buffer
     this.buffer = {};
+
+    // Now start polling again
+    this.poll();
+};
+
+Watcher.prototype.dumpHandler = function(err, diffs) {
+    this.deletedHandler(err, err ? null : diffs[0]);
+    this.createdHandler(err, err ? null : diffs[1]);
 };
 
 Watcher.prototype.modifiedHandler = function(err, files) {
@@ -128,30 +165,14 @@ Watcher.prototype.pollModified = function(cb) {
 
     var shouldPrune = true;
 
-    this.modifiedTimeout = setTimeout(function() {
+    return setTimeout(function() {
         find.modifiedSince(that.dirname, 1, shouldPrune, function(err, files) {
             cb(err, files.filter(that.filter));
-
-            // Continue
-            that.pollModified(cb);
         });
     }, this.period * 1000);
 };
 
-Watcher.prototype.pollCreated = function(cb) {
-    var that = this;
-
-    this.createdTimeout = setTimeout(function() {
-        find.createdSince(that.dirname, 1, function(err, files) {
-            cb(err, files.filter(that.filter));
-
-            // Continue
-            that.pollCreated(cb);
-        });
-    }, this.period * 1000);
-};
-
-Watcher.prototype.pollDeleted = function(cb) {
+Watcher.prototype.pollDump = function(cb) {
     var that = this;
 
     // Should be prune common unimportant folders ?
@@ -160,7 +181,7 @@ Watcher.prototype.pollDeleted = function(cb) {
     var shouldPrune = true;
 
     // Poll
-    this.deletedTimeout = setTimeout(function() {
+    return setTimeout(function() {
         find.dump(that.dirname, shouldPrune, function(err, files) {
             // Start
             var t1 = Date.now();
@@ -173,14 +194,14 @@ Watcher.prototype.pollDeleted = function(cb) {
                 // Get first initial tree
                 that.prevTree = tree;
                 // Continue
-                that.pollDeleted(cb);
+                that.pollDump(cb);
                 return;
             }
 
             // Middle
             var t2 = Date.now();
 
-            var d = arrayDiff(that.prevTree, tree);
+            var d = dualDiff(that.prevTree, tree);
 
             // End
             var t3 = Date.now();
@@ -197,9 +218,6 @@ Watcher.prototype.pollDeleted = function(cb) {
 
             // Make current tree the previous
             that.prevTree = tree;
-
-            // Continue
-            that.pollDeleted(cb);
         });
     }, this.period/2 * 1000);
 };
@@ -219,6 +237,16 @@ function arrayDiff(a1, a2) {
   for (k in o1) { if (!(k in o2)) { diff.push(k); } }
   //for (k in o2) { if (!(k in o1)) { diff.push(k); } }
   return diff;
+}
+
+// Returns both the left and right diff seperately
+function dualDiff(a1, a2) {
+  var o1={}, o2={}, diff1=[], diff2=[], i, len, k;
+  for (i=0, len=a1.length; i<len; i++) { o1[a1[i]] = true; }
+  for (i=0, len=a2.length; i<len; i++) { o2[a2[i]] = true; }
+  for (k in o1) { if (!(k in o2)) { diff1.push(k); } }
+  for (k in o2) { if (!(k in o1)) { diff2.push(k); } }
+  return [diff1, diff2];
 }
 
 // Exports
