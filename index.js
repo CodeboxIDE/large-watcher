@@ -183,9 +183,6 @@ Watcher.prototype.pollDump = function(cb) {
     // Poll
     return setTimeout(function() {
         find.dump(that.dirname, shouldPrune, function(err, files) {
-            // Start
-            var t1 = Date.now();
-
             var tree = files.filter(that.filter);
 
             if(err) {
@@ -198,20 +195,8 @@ Watcher.prototype.pollDump = function(cb) {
                 return;
             }
 
-            // Middle
-            var t2 = Date.now();
-
+            // Get deleted and created files
             var d = dualDiff(that.prevTree, tree);
-
-            // End
-            var t3 = Date.now();
-
-            console.log('filter took', t2 - t1);
-            console.log('diff took', t3 - t2);
-            console.log('Total', t3 - t1);
-            console.log('# total', files.length);
-            console.log('# filtered', tree.length);
-            console.log();
 
             // Retun data
             cb(null, d);
