@@ -152,10 +152,18 @@ Watcher.prototype.pollCreated = function(cb) {
 Watcher.prototype.pollDeleted = function(cb) {
     var that = this;
 
+    // Should be prune common unimportant folders ?
+    // Pruning is forced by default
+    // TODO: provide option to deactivate
+    var shouldPrune = true;
+
     // Poll
     this.deletedTimeout = setTimeout(function() {
-        find.dump(that.dirname, function(err, files) {
-            tree = files.filter(that.filter);
+        find.dump(that.dirname, shouldPrune, function(err, files) {
+            // Start
+            var t1 = Date.now();
+
+            var tree = files.filter(that.filter);
 
             if(err) {
                 return cb(err, []);
