@@ -46,8 +46,8 @@ function modifiedSince(dirname, time, shouldPrune, cb) {
     var args = [
         '-type', 'f',
         // Modified less than time seconds ago
-        '-mtime',
-        '-'+timestr+'s',
+        '-newermt',
+        timestr+' seconds ago',
     ];
     if(shouldPrune) {
         args = EXCLUDED_ARGS.concat(args);
